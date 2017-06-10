@@ -10,7 +10,7 @@ import argparse
 import imutils
 
 # im = cv2.imread("/home/john/Desktop/photo/DJI_0186.JPG") # estiatoria
-im = cv2.imread("/home/john/Desktop/photo/DJI_0035.JPG") # fos apo psila
+im = cv2.imread("Park.jpg") # fos apo psila
 #im = cv2.imread("/home/john/Desktop/photo/fot.JPG") # komati me ilio
 #im = cv2.imread("/home/john/Desktop/photo/DJI_0168.JPG")
 # im = cv2.imread("/home/john/Desktop/photo/DJI_0014.JPG") # parko mikro
@@ -1029,4 +1029,4 @@ if __name__ == '__main__':
         cv2.namedWindow('marked', cv2.WINDOW_NORMAL)
         cv2.imshow("marked", original)
         cv2.waitKey(0)
-        cv2.imwrite("/home/john/Desktop/photos/final_with_lost_frames.jpg",original)
+        #cv2.imwrite("/home/john/Desktop/photos/final_with_lost_frames.jpg",original)
