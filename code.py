@@ -10,7 +10,7 @@ import argparse
 import imutils
 
 # im = cv2.imread("/home/john/Desktop/photo/DJI_0186.JPG") # estiatoria
-im = cv2.imread("a29.jpg") # fos apo psila
+im = cv2.imread("Park.jpg") # fos apo psila
 #im = cv2.imread("/home/john/Desktop/photo/fot.JPG") # komati me ilio
 #im = cv2.imread("/home/john/Desktop/photo/DJI_0168.JPG")
 # im = cv2.imread("/home/john/Desktop/photo/DJI_0014.JPG") # parko mikro
@@ -26,7 +26,7 @@ flag_frame = 0
 max = 0
 ypos = 0
 sys.setrecursionlimit(1000000000)
-AdamosEdit=[]
+
 
 
 def adjust_gamma(image, gamma=1.0):
@@ -57,6 +57,7 @@ def prepro(original):
         size = 2
 
         cv2.imwrite("/home/john/Desktop/photos/gammaa"+str(gamma)+".jpg", adjusted)
+
 
         blurred = cv2.GaussianBlur(gray, (3, 3), 0)
         # blurred = gray
@@ -865,8 +866,7 @@ if __name__ == '__main__':
         cv2.waitKey(0)
 
         original = rotation(original)
-        cv2.imwrite("rotation.jpg", original)
-        adamPic=original.copy()
+
         original2 = original
 
         img = original2
@@ -1021,21 +1021,12 @@ if __name__ == '__main__':
 
             for l in range(0,len(t)):
                 final.append(t[l])
-#                AdamosEdit.append(t[l][0:4])
 
 
             i = i+1
 
+
         cv2.namedWindow('marked', cv2.WINDOW_NORMAL)
         cv2.imshow("marked", original)
-#        cv2.imwrite("testmou.jpg", original)
         cv2.waitKey(0)
-        #cv2.imwrite("/home/john/Desktop/photos/final_with_lost_frames.jpg",original)
-#        print("========================================================================")
-#        c=0
-#        for i in AdamosEdit:
-#                print(i)
-#                cv2.imshow("Part "+str(c), adamPic[i[2]:i[3],i[0]:i[1]])
-#                cv2.waitKey(0)
-
-
+        cv2.imwrite("final_with_lost_frames.jpg",original)
