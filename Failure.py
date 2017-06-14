@@ -14,7 +14,7 @@ def adjust_gamma(image, gamma=1.0):
 gamma=1.6
 sens=100
 size=0.05
-foto=cv2.imread("2.JPG") 					#Diavazw tin fotografia
+foto=cv2.imread("./Pictures/broken3.jpg") 					#Diavazw tin fotografia
 pix=foto.size/3
 cv2.imshow("Normal Picture", cv2.resize(foto,(0,0),fx=0.4, fy=0.4))
 cv2.waitKey(0)
@@ -39,16 +39,9 @@ for label in np.unique(labels):					#Pernw apo kathe perioxi
 cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=0.4, fy=0.4));
 cv2.waitKey(0);
 
-cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,		#xechorizoume tis perioxes san contours
-	cv2.CHAIN_APPROX_SIMPLE)
-cnts = cnts[0] if imutils.is_cv2() else cnts[1]
-cnts = contours.sort_contours(cnts)[0]				#sortaroume
- 
-for (i, c) in enumerate(cnts):					#pernoume apo kathe ena xechorista
-	(x, y, w, h) = cv2.boundingRect(c)			#Vriskoume sintetagmenes
-	cv2.rectangle(foto,(x,y),(x+w,y+h),(0,0,255),10)	#Zwgrafizoume ta tetragwna
-
+cnts=cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[1]
+cv2.drawContours(foto,cnts,-1, (0,0,255), 10)
 #Typwma ikonas
 cv2.imshow("After Detection", cv2.resize(foto,(0,0),fx=0.4, fy=0.4))
 cv2.waitKey(0)
-cv2.imwrite("Test2.jpg", foto);
+
