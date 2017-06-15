@@ -19,7 +19,7 @@ pix=foto.size/3
 cv2.imshow("Normal Picture", cv2.resize(foto,(0,0),fx=0.4, fy=0.4))
 cv2.waitKey(0)
 typ=foto[:,:,0]							#xechorizw to mple (giati ta fotovoltaika einai mple)
-typ=cv2.GaussianBlur(typ, (21,21), 0)				#vazw gaussian
+typ=cv2.GaussianBlur(typ, (11,11), 0)				#vazw gaussian
 typ=adjust_gamma(typ, gamma)					#to kanw apply
 typ=cv2.threshold(typ, sens, 255, cv2.THRESH_BINARY_INV)[1]	#to kanw aspro mavro (Osa pixels exoun ligotero apo sens timi gia mple ginonte aspra)
 typ=cv2.erode(typ,None,iterations=2)				#liga adjusments gia na figei to noise

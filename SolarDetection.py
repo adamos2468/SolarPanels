@@ -1,3 +1,4 @@
+#last
 from __future__ import print_function
 import numpy as np
 import argparse
@@ -9,16 +10,20 @@ import math
 import argparse
 import imutils
 
-# im = cv2.imread("/home/john/Desktop/photo/DJI_0186.JPG") # estiatoria
-im = cv2.imread("Park.jpg") # fos apo psila
-#im = cv2.imread("/home/john/Desktop/photo/fot.JPG") # komati me ilio
-#im = cv2.imread("/home/john/Desktop/photo/DJI_0168.JPG")
-# im = cv2.imread("/home/john/Desktop/photo/DJI_0014.JPG") # parko mikro
+
+
+lost_flag = 1
+rot = 1
+
+path = "./Pictures/"
+im_name = "park2.jpg"
+im =cv2.imread(path+im_name)
+
 
 h_f, width_f, n = im.shape
 
 
-# rec function global vairable
+
 original = im
 img = im
 visited = []
@@ -36,12 +41,12 @@ def adjust_gamma(image, gamma=1.0):
     table = np.array([((i / 255.0) ** invGamma) * 255
                       for i in np.arange(0, 256)]).astype("uint8")
 
-    # apply gamma correction using the lookup table
+
     return cv2.LUT(image, table)
 
 def prepro(original):
     all = []
-    for gamma in np.arange(0.0, 1.6, 0.5):
+    for gamma in np.arange(0.0, 1.5, 0.5):
         # ignore when gamma is 1 (there will be no change to the image)
         if gamma == 1:
             continue
@@ -54,33 +59,35 @@ def prepro(original):
 
         gray = cv2.cvtColor(adjusted, cv2.COLOR_BGR2GRAY)
 
+
+
         size = 2
 
-        cv2.imwrite("/home/john/Desktop/photos/gammaa"+str(gamma)+".jpg", adjusted)
+
+        blurred = cv2.GaussianBlur(gray, (11, 11), 0)
 
 
-        blurred = cv2.GaussianBlur(gray, (3, 3), 0)
-        # blurred = gray
-        # apply Canny edge detection using a wide threshold, tight
-        # threshold, and automatically determined threshold
+
         wide = cv2.Canny(blurred, 10, 200)
         wide = cv2.dilate(wide, np.ones((size, size)))
         squares = find_squares(wide)
-        cv2.imwrite("/home/john/Desktop/photos/gamma1.jpg", wide)
+
 
 
 
         tight = cv2.Canny(blurred, 225, 250)
         tight = cv2.dilate(tight, np.ones((size, size)))
         squares2 = find_squares(tight)
-        cv2.imwrite("/home/john/Desktop/photos/gamma2.jpg", tight)
 
 
         auto = auto_canny(blurred)
         auto = cv2.dilate(auto, np.ones((size, size)))
         squares3 = find_squares(auto)
-        cv2.imwrite("/home/john/Desktop/photos/gamma3.jpg", auto)
 
+
+        # cv2.namedWindow('original', cv2.WINDOW_NORMAL)
+        # cv2.imshow("original", original)
+        # cv2.waitKey(0)
 
 
         for i in range(0, len(squares)):
@@ -129,6 +136,7 @@ def sort(monadika):
 
     sorted = []
     miny_pos = 0
+    miny_pos2 = 0
     flag_min_pos = 0
     while len(monadika) != 0:  # sort all frames
         miny = monadika[0][2]
@@ -144,7 +152,8 @@ def sort(monadika):
 
         temp = monadika[0]
 
-        miny = miny + int(dimension / 2)
+        miny = int(miny + (dimension*0.20))
+        miny2 = int (miny + dimension*0.60)
         s = []
         sorted_temp = []
         j = 0
@@ -152,7 +161,7 @@ def sort(monadika):
         flag_exit = 0
 
         while (flag == 1):  # sort monadika in temp by y
-            if miny < monadika[j][3] and miny > monadika[j][2]:
+            if (miny < monadika[j][3] and miny > monadika[j][2]) or (miny2 < monadika[j][3] and miny2 > monadika[j][2]):
                 temp = monadika.pop(j)
 
                 sorted_temp.append(temp)
@@ -189,7 +198,7 @@ def rec(pos, y, length):
     global ypos
     global h_f
 
-    if (pos < 0 or y==h_f or y==0):
+    if (pos < 0 or y==h_f-1 or y==0):
         return
     if length == pos:
         flag_frame = 1
@@ -223,7 +232,7 @@ def rec2(pos, y,length):
     global h_f
     global width_f
 
-    if (pos == width_f-1 or y==0 or y==h_f-1):
+    if (pos == width_f-1 or y==0 or y==h_f-1 or pos==0):
         max = width_f-1
         return
 
@@ -274,6 +283,8 @@ def angle_cos(p0, p1, p2):
     d1, d2 = (p0-p1).astype('float'), (p2-p1).astype('float')
     return abs( np.dot(d1, d2) / np.sqrt( np.dot(d1, d1)*np.dot(d2, d2) ) )
 
+
+
 def print_list(list):
     print(len(list[0]),"\n")
     print(list[0])
@@ -318,32 +329,35 @@ def find_squares(img):
                 if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):
                     cnt = cnt.reshape(-1, 2)
                     max_cos = np.max([angle_cos( cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4] ) for i in range(4)])
-                    if max_cos < 0.1:
+                    if max_cos < 0.2:
                         squares.append(cnt)
     return squares
 
-def write_and_crop(list):
+def write_and_crop(list,original_crop):
     if len(list) == 0 :
         print("Empty List")
         return 0
 
-    temp = list[0]
-    string = "/home/john/Desktop/plaisia/Frame"
 
-    dimensionx = int(dimension / 20)  # 5%
-    dimensiony = int(dimension / 22)  # 4.5%
+
+    temp = list[0]
+    string = "./Panels/" # vale dame to path
+
+
     for i in range(0, len(list)):
         str_path = (string + str(i+1) + ".jpg")
-        cropped = im[list[i][2] - dimensionx:list[i][3] + dimensionx,
-                  list[i][0] - dimensiony:list[i][1] + dimensiony]
+        cropped = original_crop[list[i][2]:list[i][3],
+                  list[i][0]:list[i][1]]
         cv2.imwrite(str_path, cropped)
+
+    print("ADAMOS WAS HERE")
 
     print("Number of frames :",i+1)
 
 def extra(list):
     #print_list(list)
     if len(list) == 0 :
-        return
+        return []
     temp = []
     y = []
 
@@ -352,88 +366,93 @@ def extra(list):
     y = dimension + list[0][2]
 
     count = 0
+    list_int = []
+
     for i in range(0,len(list)):
         if y < list[i][3] and y > list[i][2] :
+            y = dimension + list[i][2]
             count = count +1
             temp.append(list[i])
+            list_int.append(i)
     for j in range(0,count):
-        list.pop(0)
-
-    i_temp = []
-    i=0
-    av = 0
-    if len(temp) != 0:
-        for i in range(0,len(temp)) :
-            av = av + (temp[i][1] - temp[i][0])
-        av = int(av/(i+1))
-    else:
-        return []
-
-
-    # print("len(list) : ",len(list), "   ")
-    # print("av : ",av)
-    # print("extra temp : ",temp)
-    # print("extra len(temp) : ",len(temp))
-
-    wrong_pos = []
-    correct = []
-
-    for i in range(0,len(temp)):
-        if av*1.1 > (temp[i][1]-temp[i][0]) and av/2 < (temp[i][1]-temp[i][0]) and temp[i][1]-temp[i][0] > int(av*0.5):
-            correct.append(temp[i])
-
-
-    temp = correct
-
-    # print("len(wrong) : ",len(wrong_pos))
-
+        p = list_int[len(list_int)-1]
+        # print(p)
+        list.pop(p)
+        list_int.pop(len(list_int)-1)
 
 
     return temp
 
-        # list2 = []
-        # op_flag = 1
-        #
-        #
-        # while (flag_frame == 1 and op_flag == 1):
-        #     find_lines(temp2[0], temp2[3], temp2[0] - avg1, 0)
-        #     if (flag_frame == 1):
-        #         x2 = list[0][0] - int((list[0][1] - list[0][0]) * 0.1)
-        #         x1 = list[0][0] - int(avg * 1.1)
-        #         y1 = list[0][2]
-        #         y2 = ypos
-        #         temp2 = []
-        #         temp2.append(x1)
-        #         temp2.append(x2)
-        #         temp2.append(y1)
-        #         temp2.append(y2)
-        #         temp2.append(1)
-        #         temp2.append(x1 - int(avg / 2))
-        #
-        #         if (exist(temp2, list) or exist(temp2, final)):
-        #             op_flag = 0
-        #         else:
-        #             list2.insert(0, temp2)
-        #
-        #         temp2 = list2[0]
-        # for l in range(0, len(list2)):
-        #     list.append(list2[l])
+    i_temp = []
+    # i=0
+    # av = 0
+    # if len(temp) != 0:
+    #     for i in range(0,len(temp)) :
+    #         av = av + (temp[i][1] - temp[i][0])
+    #     av = int(av/(i+1))
+    # else:
+    #     return []
+    #
+    #
+    #
+    # wrong_pos = []
+    # correct = []
+    #
+    # for i in range(0,len(temp)):
+    #     if av*1.1 > (temp[i][1]-temp[i][0]) and av/2 < (temp[i][1]-temp[i][0]) and temp[i][1]-temp[i][0] > int(av*0.5):
+    #         correct.append(temp[i])
+    #
+    #
+    # temp = correct
+    #
+    # # print("len(wrong) : ",len(wrong_pos))
+    #
+    #
+    #
+    # return temp
+    #
+    #     # list2 = []
+    #     # op_flag = 1
+    #     #
+    #     #
+    #     # while (flag_frame == 1 and op_flag == 1):
+    #     #     find_lines(temp2[0], temp2[3], temp2[0] - avg1, 0)
+    #     #     if (flag_frame == 1):
+    #     #         x2 = list[0][0] - int((list[0][1] - list[0][0]) * 0.1)
+    #     #         x1 = list[0][0] - int(avg * 1.1)
+    #     #         y1 = list[0][2]
+    #     #         y2 = ypos
+    #     #         temp2 = []
+    #     #         temp2.append(x1)
+    #     #         temp2.append(x2)
+    #     #         temp2.append(y1)
+    #     #         temp2.append(y2)
+    #     #         temp2.append(1)
+    #     #         temp2.append(x1 - int(avg / 2))
+    #     #
+    #     #         if (exist(temp2, list) or exist(temp2, final)):
+    #     #             op_flag = 0
+    #     #         else:
+    #     #             list2.insert(0, temp2)
+    #     #
+    #     #         temp2 = list2[0]
+    #     # for l in range(0, len(list2)):
+    #     #     list.append(list2[l])
 
-def mark_frames(list):
-    global original
-    print("number of frames : ",len(list))
+def mark_frames(list,original):
+
     font = cv2.FONT_HERSHEY_SIMPLEX
     for i in range(0, len(list)):
         temp = list[i]
         x = (int((temp[1]-temp[0])/2) + temp[0])
         y = (int((temp[3]-temp[2])/2) + temp[2])
 
-        im = cv2.circle(original, (x, y), 10, (255, 255, 255), -1)  # kitrino
+        im = cv2.circle(original, (x, y), 10, (255, 255, 255), -1)  # aspro
 
-        cv2.circle(im, (temp[0], temp[2]), 5, cv2.QT_FONT_BLACK, -1)
-        cv2.circle(im, (temp[0], temp[3]), 5, cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, -1)
-        cv2.circle(im, (temp[1], temp[2]), 5, (255, 0, 0), -1)
-        cv2.circle(im, (temp[1], temp[3]), 5, 255, -1)
+        cv2.circle(original, (temp[0], temp[2]), 5, cv2.QT_FONT_BLACK, -1)
+        cv2.circle(original, (temp[0], temp[3]), 5, cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, -1)
+        cv2.circle(original, (temp[1], temp[2]), 5, (255, 0, 0), -1)
+        cv2.circle(original, (temp[1], temp[3]), 5, 255, -1)
 
 def find_lost_frames (list):
     temp = []
@@ -543,18 +562,23 @@ def lost(list,final):
     global flag_frame
     global visited
     global ypos
+    global im
     plus = 0
     list_temp = []
 
+    if len(list)==0:
+        return []
+
     font = cv2.FONT_HERSHEY_SIMPLEX
     avg = 0
-
+    avg_y =0
     i = 0
     for i in range(0,len(list)):
         avg = avg + (list[i][1] - list[i][0])
-
+        avg_y = avg_y + (list[i][3]-list[i][2])
 
     avg = int(avg/(i+1))
+    avg_y = int(avg_y / (i))
     avg1 = avg - int(avg * 0.4)
 
     lost= []
@@ -580,7 +604,7 @@ def lost(list,final):
             temp_pos.append(1)
             temp_pos.append(x1 - int(avg/2))
 
-            if x1 > 0 and exist(temp_pos,list) == 0 and exist(temp_pos,final) == 0:
+            if x1 > 0 and exist(temp_pos,list) == 0 and exist(temp_pos,final) == 0 and im[temp_pos[2]][temp_pos[0]] == 255:
                 list.insert(0,temp_pos)
             else :
                 flag_pixel=0
@@ -613,8 +637,8 @@ def lost(list,final):
                 temp2.append(1)
                 temp2.append(x2 - int(avg / 2))
 
-                if (exist(temp_pos,list) == 0 ) and (exist(temp2,final) == 0):
-                    list.insert(i,temp_pos)
+                if (exist(temp_pos,list) == 0 ) and (exist(temp2,final) == 0) and im[temp_pos[2]][temp_pos[0]] == 255:
+                        list.insert(i,temp_pos)
 
 
 
@@ -638,8 +662,8 @@ def lost(list,final):
                 temp_pos.append(1)
                 temp_pos.append(x2 + int(avg / 2))
 
-                if exist(temp_pos, list) == 0 and exist(temp_pos,final) == 0:
-                    list.insert(i, temp_pos)
+                if exist(temp_pos, list) == 0 and exist(temp_pos,final) == 0 and im[temp_pos[2]][temp_pos[0]] == 255:
+                        list.insert(i, temp_pos)
 
 
 
@@ -666,27 +690,37 @@ def lost(list,final):
             temp_pos.append(y2)
 
 
-            if x2 < width_f and exist(temp_pos, list) == 0 and exist(temp_pos, final) == 0:
-                list.append(temp_pos)
+            if x2 < 4000 and exist(temp_pos, list) == 0 and exist(temp_pos, final) == 0 and im[temp_pos[2]][temp_pos[0]] == 255:
+                    list.append(temp_pos)
             else:
                 flag_frame = 0
 
     return
 
+
 def duplicate(list_all):
     monadika = []
     flag = 1
     dimension = 0
+    dimension_y = 0
+
+    list_int = []
+
+
 
     for i in range(len(list_all)):
         dimension = (list_all[i][1] - list_all[i][0]) + dimension
-
+        dimension_y = (list_all[i][3] - list_all[i][2]) + dimension_y
+    dimension_y = int(dimension_y / len(list_all))
     dimension = int(dimension / len(list_all))
+
+
     i = 0
+
 
     while flag:  # megala plaisia
         avx = (list_all[i][1] - list_all[i][0])
-        if (avx > int(dimension * 1.5)) or (avx < int(dimension * 0.4)):
+        if (avx > int(dimension * 1.5)) or (avx < int(dimension*0.5)) or ((list_all[i][3]-list_all[i][2])<(dimension_y*0.65)):
             list_all.pop(i)
         else:
             i = i + 1
@@ -695,29 +729,30 @@ def duplicate(list_all):
             flag = 0
 
     flag = 1
-
+    p = dimension*0.2
     for i in range(0, len(list_all)):
         flag = 1
         temp = list_all.pop()
 
         for j in range(0, len(monadika)):  # if already exist
-            if same_range(temp[0], temp[1], monadika[j][0], monadika[j][1]) and same_range(temp[2], temp[3],
-                                                                                           monadika[j][2],
-                                                                                           monadika[j][3]):
-                if monadika[j][0] > temp[0]:
-                    monadika[j][0] = temp[0]
-                if monadika[j][2] > temp[2]:
-                    monadika[j][2] = temp[2]
-                if monadika[j][1] < temp[1]:
-                    monadika[j][1] = temp[1]
-                if monadika[j][3] > temp[3]:
-                    monadika[j][3] = temp[3]
+            if same_range(temp[0], temp[1], monadika[j][0]+p, monadika[j][1]-p) and same_range(temp[2], temp[3],
+                                                                                           monadika[j][2]+p,
+                                                                                           monadika[j][3]-p):
+                # if monadika[j][0] > temp[0]:
+                #     monadika[j][0] = temp[0]
+                # if monadika[j][2] > temp[2]:
+                #     monadika[j][2] = temp[2]
+                # if monadika[j][1] < temp[1]:
+                #     monadika[j][1] = temp[1]
+                # if monadika[j][3] > temp[3]:
+                #     monadika[j][3] = temp[3]
 
                 flag = 0
         if flag == 1:
             monadika.append(temp)
 
     return monadika
+
 
 def auto_canny(image, sigma=0.55):
     # compute the median of the single channel pixel intensities
@@ -772,6 +807,9 @@ def angle (a, b, c):
     return math.degrees(math.acos((c**2 - b**2 - a**2)/(-2.0 * a * b)))
 
 def rotation(original):
+    global h_f, width_f
+
+
     img = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)  # gray
     img = cv2.blur(img, (3, 3))
 
@@ -816,8 +854,8 @@ def rotation(original):
     if(len(max_pos)>1):
         one.append(max_pos[0][0])
         one.append(max_pos[0][3])
-        two.append(max_pos[len(pos_list)-1][1])
-        two.append(max_pos[len(pos_list)-1][3])
+        two.append(max_pos[2][1])
+        two.append(max_pos[2][3])
 
         three.append(two[0])
         three.append(one[1])
@@ -829,26 +867,18 @@ def rotation(original):
     num = int(angle(ypotinousa, platos, ipsos)+1)
 
     print(num," This is a num")
-    rotated = []
+    rotated = original
+
+
     if(one[1]>two[1]):
-        rotated = imutils.rotate_bound(original,num)
+       rotated = imutils.rotate_bound(original,num)
     else:
-        rotated = imutils.rotate_bound(original,-num)
+       rotated = imutils.rotate_bound(original,-num)
 
         # h,width,n = rotated.shape
         # print(rotated.shape)
 
-
-
-
-    cv2.namedWindow('blacke', cv2.WINDOW_NORMAL)
-    cv2.imshow("blacke", im)
-    cv2.waitKey(0)
-
-
-    cv2.namedWindow('rotated', cv2.WINDOW_NORMAL)
-    cv2.imshow("rotated", rotated)
-    cv2.waitKey(0)
+    h_f, width_f, n = rotated.shape
 
 
     return rotated
@@ -858,23 +888,15 @@ def rotation(original):
 ################################################# main #################################################################
 if __name__ == '__main__':
 
-        cv2.imwrite("/home/john/Desktop/photos/original.jpg", original)
-        # original = imutils.rotate_bound(original, 3)
-
-        cv2.namedWindow('original', cv2.WINDOW_NORMAL)
-        cv2.imshow("original", original)
-        cv2.waitKey(0)
 
         original = rotation(original)
 
+        original_crop = original.copy()
         original2 = original
 
         img = original2
         im = original2
 
-
-
-        # img = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
         img = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY) # gray
         img = cv2.blur(img, (3, 3))
 
@@ -884,60 +906,23 @@ if __name__ == '__main__':
         img = cv2.Canny(img, 50 ,200)
 
 
-
-
-
         img = cv2.dilate(img, np.ones((5, 5)))
         t, img = cv2.threshold(img, 160, 255, cv2.THRESH_BINARY)
 
         im = img
-
-        cv2.namedWindow('black', cv2.WINDOW_NORMAL)
-        cv2.imshow("black", im)
-        cv2.waitKey(0)
 
 
 
 
 
         squares = prepro(original)
-
-        cv2.drawContours(original2, squares, -1, (0, 255, 0), 1) # DRAW
-
-
-
-        cv2.namedWindow('black', cv2.WINDOW_NORMAL)
-        cv2.imshow("black", im)
+        # cv2.drawContours(original, squares, -1, (0, 255, 0), 1)
+        cv2.namedWindow('marked', cv2.WINDOW_NORMAL)
+        cv2.imshow("marked", original)
         cv2.waitKey(0)
-        # cv2.imwrite("/home/john/Desktop/photos/black.jpg", im)
-
-        cv2.namedWindow('normal', cv2.WINDOW_NORMAL)
-        cv2.imshow("normal", original2)
-        cv2.waitKey(0)
-        # cv2.imwrite("/home/john/Desktop/photos/found_frames.jpg", original2)
-
-
-
-
-        #komeni = im[1036:1274,18:165]
-        #komeni = im[1020:1285, 185:335]
-
-        #img = cv2.circle(img,(165, 1030), 20, (0,255,255),-1) # kitrino
-        #img = cv2.circle(img, (169, 1270), 20, (255, 0, 255), -1)
-        #img = cv2.circle(img, (24, 1274), 20, (255, 255, 0), -1)
-        #img = cv2.circle(img, (18, 1036), 20, (255, 0, 255), -1) #lila
-
-        #img = cv2.circle(img,(185, 1026), 20, (0,255,255),-1) # kitrino
-        # img = cv2.circle(img, (169, 1270), 20, (255, 0, 255), -1)
-        # img = cv2.circle(img, (24, 1274), 20, (255, 255, 0), -1)
-        # img = cv2.circle(img, (18, 1036), 20, (255, 0, 255), -1) #lila
-
-
-
 
         new = img
-        cv2.namedWindow('pro', cv2.WINDOW_NORMAL)
-        cv2.imshow("pro", img)
+        count_plaisia = 0
 
 
         list_all = []
@@ -946,87 +931,27 @@ if __name__ == '__main__':
         list_all = positions(squares) #change the types of positions
 
         monadika = []
-        print("Nubrer of frames found : ",len(list_all))
-        monadika = duplicate(list_all)
-        # flag = 1
-        # dimension = 0
-        #
-        # for i in range(len(list_all)):
-        #     dimension = (list_all[i][1] - list_all[i][0]) + dimension
-        #
-        # dimension = int(dimension/len(list_all))
-        # i=0
-        #
-        # while flag: # megala plaisia
-        #     avx = (list_all[i][1] - list_all[i][0])
-        #     if (avx > int(dimension*1.5)) or (avx < int(dimension* 0.4)) :
-        #         list_all.pop(i)
-        #     else :
-        #         i = i+1
-        #
-        #     if i==len(list_all) :
-        #         flag = 0
-        #
-        #
-        # flag = 1
-        #
-        # for i in range(0, len(list_all)):
-        #     flag = 1
-        #     temp = list_all.pop()
-        #
-        #     for j in range(0, len(monadika)): # if already exist
-        #         if same_range(temp[0], temp[1], monadika[j][0], monadika[j][1]) and same_range(temp[2], temp[3], monadika[j][2], monadika[j][3]):
-        #             if monadika[j][0] > temp[0]:
-        #                  monadika[j][0] = temp[0]
-        #             if monadika[j][2] > temp[2]:
-        #                  monadika[j][2] = temp[2]
-        #             if monadika[j][1] < temp[1]:
-        #                  monadika[j][1] = temp[1]
-        #             if monadika[j][3] > temp[3]:
-        #                  monadika[j][3] = temp[3]
-        #
-        #             flag = 0
-        #     if flag == 1 :
-        #         monadika.append(temp)
+
+        print("Nubrer of frames : ",len(list_all))
+
+        monadika = list_all
+        dup = duplicate(list_all)
+        sorted = sort(dup)
+        mark_frames(sorted,original)
+        write_and_crop(sorted,original_crop)  # thelei na t valeis path
+        # final = []
+
+        # while(len(sorted)!=0):
+        #     t = extra(list_all)
+        #     lost(t,final)
+        #     if(len(t)>2):
+        #         mark_frames(final)
 
 
-        sorted = sort(monadika)
-
-        i=0
-        c = 4
-
-        print(len(sorted) , "sorted")
-
-
-        final = []
-
-        while(len(sorted)!=0):
-            print("this is the value of integer i : ",i)
-            print("\n\n")
-            print("sorted  ", len(sorted) , "   i : ",i+1)
-            t = []
-            t = extra(sorted)                #lost(t)
-            print("t : ",len(t))
-
-
-            print("sorted  ",len(sorted) , "   i : ",i+1)
-            if (i+1) == c:
-                print()
-            print_list(t)
-            lost(t, final)
-            mark_frames(t)
-
-            print("len list     ",len(list))
-
-
-            for l in range(0,len(t)):
-                final.append(t[l])
-
-
-            i = i+1
 
 
         cv2.namedWindow('marked', cv2.WINDOW_NORMAL)
         cv2.imshow("marked", original)
         cv2.waitKey(0)
-        cv2.imwrite("final_with_lost_frames.jpg",original)
+        print("plaisia marked = ",count_plaisia)
+        cv2.imwrite("results.jpg", original)
