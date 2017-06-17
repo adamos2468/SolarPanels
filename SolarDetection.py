@@ -342,17 +342,17 @@ def write_and_crop(list,original_crop):
 
     temp = list[0]
     string = "./Panels/" # vale dame to path
-
-
+    f=open("where.txt",'w')
+    #f.write(str(len(list))+"\n")
     for i in range(0, len(list)):
         str_path = (string + str(i+1) + ".jpg")
         cropped = original_crop[list[i][2]:list[i][3],
                   list[i][0]:list[i][1]]
+        f.write(str(list[i][2])+" "+str(list[i][3])+" "+str(list[i][0])+" "+str(list[i][1])+"\n")
         cv2.imwrite(str_path, cropped)
-
-    print("ADAMOS WAS HERE")
-
+    f.close()
     print("Number of frames :",i+1)
+
 
 def extra(list):
     #print_list(list)
@@ -948,10 +948,8 @@ if __name__ == '__main__':
         #         mark_frames(final)
 
 
-
-
         cv2.namedWindow('marked', cv2.WINDOW_NORMAL)
         cv2.imshow("marked", original)
         cv2.waitKey(0)
         print("plaisia marked = ",count_plaisia)
-        cv2.imwrite("results.jpg", original)
+        cv2.imwrite("rotated.jpg", original_crop)

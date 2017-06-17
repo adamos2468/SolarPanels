@@ -4,6 +4,12 @@ import numpy as np
 import argparse
 import imutils
 import cv2
+import sys
+import getopt
+
+gamma=1.6
+sens=100
+size=0.05
 
 def adjust_gamma(image, gamma=1.0):
 	invGamma=1.0/gamma
@@ -11,37 +17,67 @@ def adjust_gamma(image, gamma=1.0):
 		for i in np.arange(0, 256)]).astype("uint8")
 	return cv2.LUT(image, table)	
 
-gamma=1.6
-sens=100
-size=0.05
-foto=cv2.imread("./Pictures/broken3.jpg") 					#Diavazw tin fotografia
-pix=foto.size/3
-cv2.imshow("Normal Picture", cv2.resize(foto,(0,0),fx=0.4, fy=0.4))
-cv2.waitKey(0)
-typ=foto[:,:,0]							#xechorizw to mple (giati ta fotovoltaika einai mple)
-typ=cv2.GaussianBlur(typ, (11,11), 0)				#vazw gaussian
-typ=adjust_gamma(typ, gamma)					#to kanw apply
-typ=cv2.threshold(typ, sens, 255, cv2.THRESH_BINARY_INV)[1]	#to kanw aspro mavro (Osa pixels exoun ligotero apo sens timi gia mple ginonte aspra)
-typ=cv2.erode(typ,None,iterations=2)				#liga adjusments gia na figei to noise
-typ=cv2.dilate(typ,None, iterations=4)				#liga adjusments gia na figei to noise
-labels = measure.label(typ, neighbors=8, background=0)		#Xechorizw tis perioxes me aspro kai exoyn gyro 8 aspra pixels
-mask = np.zeros(typ.shape, dtype="uint8")			#Dimiourgw ena mask apo midenika
+def make_good_list(now):
+	neo=[]
+	for i in now:
+		neo.append(i.split().copy())
+		for j in range(0,4):
+			neo[-1][j]=int(neo[-1][j])
+	return neo
 
-for label in np.unique(labels):					#Pernw apo kathe perioxi
-	if label == 0:						#An einai Mideniko tote einai background
-		continue					#Kamw Skip 
-	labelMask = np.zeros(typ.shape, dtype="uint8")		#Gia kathe perioxi metroume ta pixels
-	labelMask[labels == label] = 255			
-	numPixels = cv2.countNonZero(labelMask)
-	if (numPixels/pix)*100 > size:				#An einai perisotera apo kapio arithmo pixels
-		mask = cv2.add(mask, labelMask)			#vazoume ta megala sto mask
+def make_blue(image, exept):
+	cop=image.copy()
+	cop[:,:,0]=255
+	for i in exept:
+		for g in range(i[2], i[3]):
+			for q in range(i[0], i[1]):
+				cop[q][g]=foto[q][g].copy()
+	return cop
 
-cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=0.4, fy=0.4));
-cv2.waitKey(0);
+def get_list(path):
+	fil=open(path, 'r')
+	lis=fil.readlines()
+	fil.close()
+	return lis
 
-cnts=cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[1]
-cv2.drawContours(foto,cnts,-1, (0,0,255), 10)
-#Typwma ikonas
+def prepare_mask(foto):
+	blue=foto[:,:,0]						
+	blue=cv2.GaussianBlur(blue, (11,11), 0)				
+	blue=adjust_gamma(blue, gamma)					
+	blue=cv2.threshold(blue, sens, 255, cv2.THRESH_BINARY_INV)[1]	
+	blue=cv2.erode(blue,None,iterations=2)				
+	blue=cv2.dilate(blue,None, iterations=4)			
+	return blue
+
+def find_failure(foto, crop):
+	pix=foto.size/3
+	blue=prepare_mask(crop)
+	labels = measure.label(blue, neighbors=8, background=0)		
+	mask = np.zeros(blue.shape, dtype="uint8")			
+	for label in np.unique(labels):					
+		if label == 0:						
+			continue					 
+		labelMask = np.zeros(blue.shape, dtype="uint8")		
+		labelMask[labels == label] = 255			
+		numPixels = cv2.countNonZero(labelMask)
+		if (numPixels/pix)*100 > size:				
+			mask = cv2.add(mask, labelMask)			
+	#cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=0.4, fy=0.4));
+	cv2.waitKey(0);
+	cnts=cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[1]
+	cv2.drawContours(foto,cnts,-1, (0,0,255), 5)
+
+####################################__MAIN__###########################################
+
+
+if(sys.argv[1]=='-b'):
+	foto=cv2.imread(sys.argv[2])
+	marked=foto.copy()
+elif(sys.argv[1]=='-p'):
+	foto=cv2.imread(sys.argv[2])
+	exept=get_list(sys.argv[3])
+	exept=make_good_list(exept)
+	marked=make_blue(foto, exept)
+find_failure(foto, marked)
 cv2.imshow("After Detection", cv2.resize(foto,(0,0),fx=0.4, fy=0.4))
 cv2.waitKey(0)
-

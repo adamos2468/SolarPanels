@@ -1,4 +1,5 @@
 Pictures/
 Panels/
-results.jpg
+*.jpg
 Resources/
+*.txt
