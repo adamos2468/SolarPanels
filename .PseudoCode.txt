@@ -1,5 +1,0 @@
-for each FoundSolarPanlel:
-	WidthSet.add(Fi)
-for each Gap between SolarPanels:
-	if(WidthSet.find(GapSize)):
-		markAsSolarPanel(Gap)
