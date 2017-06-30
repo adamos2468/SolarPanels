@@ -16,7 +16,7 @@ lost_flag = 1
 rot = 1
 
 path = "./Pictures/"
-im_name = "park2.jpg"
+im_name = "park1.jpg"
 im =cv2.imread(path+im_name)
 
 
