@@ -42,7 +42,7 @@ def get_list(path):
 
 def prepare_mask(foto):
 	blue=foto[:,:,0]						
-	blue=cv2.GaussianBlur(blue, (11,11), 0)				
+	blue=cv2.GaussianBlur(blue, (31,31), 0)				
 	blue=adjust_gamma(blue, gamma)					
 	blue=cv2.threshold(blue, sens, 255, cv2.THRESH_BINARY_INV)[1]	
 	blue=cv2.erode(blue,None,iterations=2)				
@@ -53,8 +53,10 @@ def find_failure(foto, crop):
 	pix=foto.size/3
 	blue=prepare_mask(crop)
 	labels = measure.label(blue, neighbors=8, background=0)		
-	mask = np.zeros(blue.shape, dtype="uint8")			
-	for label in np.unique(labels):					
+	mask = np.zeros(blue.shape, dtype="uint8")
+	for label in np.unique(labels):	
+		if(label%100==0):
+			print ('label: '+str(label))				
 		if label == 0:						
 			continue					 
 		labelMask = np.zeros(blue.shape, dtype="uint8")		
@@ -63,9 +65,9 @@ def find_failure(foto, crop):
 		if (numPixels/pix)*100 > size:				
 			mask = cv2.add(mask, labelMask)			
 	#cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=0.4, fy=0.4));
-	cv2.waitKey(0);
+	#cv2.waitKey(0);
 	cnts=cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[1]
-	cv2.drawContours(foto,cnts,-1, (0,0,255), 5)
+	cv2.drawContours(foto,cnts,-1, (0,0,255), 10)
 
 ####################################__MAIN__###########################################
 
