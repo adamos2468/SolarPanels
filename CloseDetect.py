@@ -2,87 +2,88 @@ from skimage import measure
 import cv2
 import numpy as np
 import scipy as sp
-
+count=0
 def adjust_gamma(image, gamma=1.0):
 	invGamma=1.0/gamma
 	table = np.array([((i / 255.0) ** invGamma) * 255
 		for i in np.arange(0, 256)]).astype("uint8")
-	return cv2.LUT(image, table) 
+	return cv2.LUT(image, table)
+
 def find_hehe(foto, blue):
 	size=0.05
 	pix=foto.size/3
-	labels = measure.label(blue, neighbors=8, background=0)		
-	mask = np.zeros(blue.shape, dtype="uint8")			
-	c=0
+	labels = measure.label(blue, neighbors=8, background=0)
+	mask = np.zeros(blue.shape, dtype="uint8")
 	for label in np.unique(labels):
-		c+=1
-		if(c%100==0):
-			print (label)					
-		if label == 0:						
-			continue					 
-		labelMask = np.zeros(blue.shape, dtype="uint8")		
-		labelMask[labels == label] = 255			
+		if label == 0:
+			continue
+		labelMask = np.zeros(blue.shape, dtype="uint8")
+		labelMask[labels == label] = 255
 		numPixels = cv2.countNonZero(labelMask)
-		if (numPixels/pix)*100 > size:				
-			mask = cv2.add(mask, labelMask)			
-	cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=hmm, fy=hmm));
+		if (numPixels/pix)*100 > size:
+			mask = cv2.add(mask, labelMask)
+	#Typwmata
+	inver=inv_colors(mask)
+	cv2.imshow("The Mask", cv2.resize(inver, (0,0),fx=hmm, fy=hmm));
 	cv2.waitKey(0);
-	cnts=cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[1]
-	cv2.drawContours(foto,cnts,-1, (0,0,255), -1)
-	cv2.imshow("The Detect", cv2.resize(foto, (0,0),fx=hmm, fy=hmm));
+	draw_squares(inver, foto)
+	cv2.imshow("The Detect: "+str(count), cv2.resize(foto, (0,0),fx=hmm, fy=hmm));
+	#cv2.waitKey(0)
+def abs(a):
+	if(a<0):
+		return -a
+	return a
+def sfalma(orig, tim):
+	return abs(float(orig)-float(tim))/orig
+def draw_squares(thresh, foto):
+	bin, contours, hier = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+	neo_cnt=[]
+	for cnt in contours:
+		area = cv2.contourArea(cnt, oriented = False)
+		x,y,w,h = cv2.boundingRect(cnt)
+		carea=w*h
+
+		if(area>int((float(foto.size)/3)*0.01)):
+			cv2.rectangle(foto,(x,y),(x+w,y+h),(255,0,0),15)
+			print (str(area)+" "+str(carea))
+			print (sfalma(area, carea))
+			cv2.imshow("The Detect", cv2.resize(foto, (0,0),fx=hmm, fy=hmm));
+			cv2.waitKey(0)
+
+		if(area>float((float(foto.size)/3)*0.01) and sfalma(area, carea)<0.20):
+			neo_cnt.append(cnt)
+	print (str(count)+":\t"+str(len(neo_cnt)))
+	cv2.drawContours(foto,neo_cnt,-1, (0,0,255), -1)
+
+def inv_colors(img):
+	y,x=img.shape
+	cop=img.copy()
+	for i in range(y):
+		for j in range(x):
+			cop[i, j]=255-cop[i, j]
+	return cop
+for i in range(10,11):
+	count+=1
+	path="./Pictures/konta/"
+	path+="konta"+str(i+1)+".jpg"
+	print (path)
+	hmm=0.4
+	minval=50
+	maxval=85
+	original=cv2.imread(path)
+	original= cv2.resize(original, (2048, 1536))
+	edit=original
+	edit=cv2.medianBlur(original, 5)
+	blue=edit
+	blue=cv2.cvtColor(blue, cv2.COLOR_BGR2GRAY)
+	cv2.imshow("Aspromavro", cv2.resize(blue, (0,0),fx=hmm, fy=hmm))
 	cv2.waitKey(0)
-	squ=find_squares(mask)
-	for i in squ:
-		print (i)
-def find_squares(img): 
-	img = cv2.GaussianBlur(img, (5, 5), 0) 
-	squares = [] 
-	for gray in cv2.split(img): 
-		for thrs in range(0, 255, 26): 
-			if thrs == 0: 
-                		bin = cv2.Canny(gray, 0, 50, apertureSize=5) 
-                		bin = cv2.dilate(bin, None) 
-			else: 
-				retval, bin = cv2.threshold(gray, thrs, 255, cv2.THRESH_BINARY) 
-				bin,contours, hierarchy = cv2.findContours(bin, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE) 
-			for cnt in contours: 
-				cnt_len = cv2.arcLength(cnt, True) 
-				cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True) 
-			if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt): 
-				cnt = cnt.reshape(-1, 2) 
-				max_cos = np.max([angle_cos( cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4] ) for i in range(4)]) 
-			if max_cos < 0.2: 
-				squares.append(cnt) 
-	return squares 
-
-path="./Pictures/"
-path+="konta3.jpg"
-hmm=0.4
-minval=50
-maxval=85
-original=cv2.imread(path)
-edit=original
-edit=cv2.medianBlur(original, 11)
-blue=edit
-blue=edit[:,:,0]
-#tresh=cv2.threshold(blue, sens, 255, cv2.THRESH_BINARY)[1]
-
-#gray=cv2.cvtColor(blue, cv2.COLOR_BGR2GRAY)
-grey=blue
-tresh=grey
-tresh=adjust_gamma(tresh, 0.5)
-#tresh=cv2.threshold(gray, sens, 255, cv2.THRESH_BINARY)[1]
-'''
-for i in range(tresh.shape[0]):
-	print (i)
-	for j in range(tresh.shape[1]):
-		if(minval<=tresh[i, j] and tresh[i, j]<=maxval):
-			tresh[i, j]=255
-		else:
-			tresh[i, j]=0
-'''
-tresh=cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,111,-21)
-arr=cv2.resize(tresh, (0,0), fx=hmm, fy=hmm)
-#cv2.imshow("Test", arr)
-find_hehe(original, tresh)
+	#tresh=cv2.threshold(blue, sens, 255, cv2.THRESH_BINARY)[1]
+	#gray=cv2.cvtColor(blue, cv2.COLOR_BGR2GRAY)
+	grey=blue
+	tresh=grey
+	tresh=adjust_gamma(tresh, 0.5)
+	#tresh=cv2.threshold(gray, sens, 255, cv2.THRESH_BINARY)[1]
+	tresh=cv2.adaptiveThreshold(grey,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,109,-12)
+	find_hehe(original, tresh)
 cv2.waitKey(0)

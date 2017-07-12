@@ -314,6 +314,8 @@ def same_in_x (x1,x2,pos):
 
 def find_squares(img):
     img = cv2.GaussianBlur(img, (5, 5), 0)
+    cv2.imshow("Adamos Needs", img)
+    cv2.waitKey(0)
     squares = []
     for gray in cv2.split(img):
         for thrs in range(0, 255, 26):
