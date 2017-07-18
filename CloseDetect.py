@@ -25,6 +25,7 @@ def auto_canny(image, sigma=0.55):
 
 def find_hehe(foto, blue):
 	mask=blue
+	'''
 	size=0.05
 	pix=foto.size/3
 	labels = measure.label(blue, neighbors=8, background=0)
@@ -37,12 +38,14 @@ def find_hehe(foto, blue):
 		numPixels = cv2.countNonZero(labelMask)
 		if (numPixels/pix)*100 > size:
 			mask = cv2.add(mask, labelMask)
+	'''
 	#Typwmata
-	inver=inv_colors(mask)
+	#inver=inv_colors(mask)
+	inver=mask
 	cv2.imshow("The Mask", cv2.resize(inver, (0,0),fx=hmm, fy=hmm));
 	#cv2.waitKey(0);
 	draw_squares(inver, foto)
-	cv2.imshow("The Detect: "+str(count), cv2.resize(foto, (0,0),fx=hmm, fy=hmm));
+	#cv2.imshow("The Detect: "+str(count), cv2.resize(foto, (0,0),fx=hmm, fy=hmm));
 	#cv2.waitKey(0)
 def abs(a):
 	if(a<0):
@@ -70,18 +73,19 @@ def draw_squares(thresh, foto):
 			cv2.waitKey(0)
 			'''
 
-		if(area>float((float(foto.size)/3)*0.01) and sfalma(area, carea)<0.16):
+		if(area>float((float(foto.size)/3)*0.01) and sfalma(area, carea)<0.18):
 			neo_cnt.append(cnt)
-
 			rect = cv2.minAreaRect(cnt)
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
-			cv2.drawContours(foto,[box],0,(0,255,255),15)
+			cv2.drawContours(foto,[box],0,(0,g,r),15)
+			'''
 			print (str(area)+" "+str(carea))
 			print (sfalma(area, carea))
+			'''
 
-	print (str(count)+":\t"+str(len(neo_cnt)))
-	#cv2.drawContours(foto,neo_cnt,-1, (0,0,255), -1)
+	#print (str(count)+":\t"+str(len(neo_cnt)))
+	cv2.drawContours(edit,neo_cnt,-1, (0,0,0), -1)
 
 def inv_colors(img):
 	y,x=img.shape
@@ -98,12 +102,14 @@ if(len(sys.argv)>1):
 	arxi=int(sys.argv[1])'''
 #telos=arxi+1
 telos=15
+g=255
+r=255
 for i in range(arxi, telos):
 	count+=1
 	path="./Pictures/konta/"
 	path+="konta"+str(i+1)+".jpg"
 	print (path)
-	hmm=0.25
+	hmm=0.5
 	minval=50
 	maxval=85
 	original=cv2.imread(path)
@@ -114,6 +120,17 @@ for i in range(arxi, telos):
 	edit=cv2.cvtColor(edit, cv2.COLOR_BGR2GRAY)
 	cv2.imshow("Aspromavro", cv2.resize(edit, (0,0),fx=hmm, fy=hmm))
 	#cv2.waitKey(0)
-	edit=cv2.adaptiveThreshold(edit,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,109,-2.1)
+	edit=cv2.adaptiveThreshold(edit,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,109, -7)
 	find_hehe(original, edit)
+	'''
+	lol=149
+	while lol>=49:
+		for i in range(-10, 0):
+			print("Doing Detect "+str(count)+"with box "+str(lol)+" and color "+str(i))
+			cop=edit
+			cop=cv2.adaptiveThreshold(cop,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,lol, i)
+			find_hehe(original, cop)
+		lol-=10
+	'''
+	cv2.imshow("Detect: "+str(count),  cv2.resize(original, (0,0),fx=hmm, fy=hmm));
 cv2.waitKey(0)
