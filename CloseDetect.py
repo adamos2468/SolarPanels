@@ -5,6 +5,8 @@ import scipy as sp
 import sys
 
 count=0
+w=255
+acc=0.18
 def adjust_gamma(image, gamma=1.0):
 	invGamma=1.0/gamma
 	table = np.array([((i / 255.0) ** invGamma) * 255
@@ -32,7 +34,8 @@ def auto_canny(image, sigma=0.55):
     return edged
 
 def find_hehe(foto, mask):
-	#cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=hmm, fy=hmm));
+	cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=hmm, fy=hmm));
+	#cv2.waitKey(0)
 	draw_squares(mask, foto)
 
 def draw_squares(thresh, foto):
@@ -42,13 +45,13 @@ def draw_squares(thresh, foto):
 		area = cv2.contourArea(cnt)
 		rect = cv2.minAreaRect(cnt)
 		carea=rect[1][0]*rect[1][1]
-		if(area>float((float(foto.size)/3)*0.01) and sfalma(area, carea)<=0.1):
+		if(area>float((float(foto.size)/3)*0.01) and sfalma(area, carea)<=acc):
 			neo_cnt.append(cnt)
 			rect = cv2.minAreaRect(cnt)
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
 			cv2.drawContours(foto,[box],0,(b,g,r),15)
-	cv2.drawContours(edit,neo_cnt,-1, (255,255,255), -1)
+			cv2.drawContours(edit,[box],0,(w,w,w),-1)
 
 def deColorStage(image):
 	image=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -69,9 +72,10 @@ def thresholdStage(image, squr, xrw):
 arxi=0
 telos=15
 
-#		[b,   g,   r, blur, squr, xrw,  gam]
-modes=[	[255, 0	 , 0,    9,  109,  -7, 0.75],
-		[0	, 255, 0,    3,   69,   2,  0.5]
+#		[b,      g,   r, blur, squr, xrw,  gam]
+modes=[	 [255,   0,   0,    9,  109,  -6,  0.75]
+		,[0	 , 255,   0,    3,   69,   2,  0.75]
+		,[0  ,   0, 255,    3,  21,  1,  1.75]
 		]
 for i in range(arxi, telos):
 	count+=1
@@ -85,7 +89,7 @@ for i in range(arxi, telos):
 	original= cv2.resize(original, (2048, 1536))
 	edit=original.copy()
 	for j in range(len(modes)):
-		#cv2.imshow("The Edit", cv2.resize(edit, (0,0),fx=hmm, fy=hmm));
+		cv2.imshow("The Edit", cv2.resize(edit, (0,0),fx=hmm, fy=hmm));
 		#cv2.waitKey(0)
 		b, g, r, blur, squr, xrw, gam=modes[j]
 		changes=edit.copy()
