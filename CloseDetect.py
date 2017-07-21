@@ -45,12 +45,13 @@ def draw_squares(thresh, foto):
 		area = cv2.contourArea(cnt)
 		rect = cv2.minAreaRect(cnt)
 		carea=rect[1][0]*rect[1][1]
-		if(area>float((float(foto.size)/3)*0.01) and sfalma(area, carea)<=acc):
+		if((area>float((float(foto.size)/3)*0.01) and area<=float((float(foto.size)/3)*0.25)) and sfalma(area, carea)<=acc):
 			neo_cnt.append(cnt)
 			rect = cv2.minAreaRect(cnt)
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
-			cv2.drawContours(foto,[box],0,(b,g,r),15)
+			b,g,r=[0,255,255]
+			cv2.drawContours(foto,[box],0,(b,g,r),5)
 			cv2.drawContours(edit,[box],0,(w,w,w),-1)
 
 def deColorStage(image):
@@ -75,7 +76,8 @@ telos=15
 #		[b,      g,   r, blur, squr, xrw,  gam]
 modes=[	 [255,   0,   0,    9,  109,  -6,  0.75]
 		,[0	 , 255,   0,    3,   69,   2,  0.75]
-		,[0  ,   0, 255,    3,  21,  1,  1.75]
+		,[0  ,   0, 255,    3,   21,   1,  1.75]
+		,[0  , 255, 255,    0,   15,   0,   0.3]
 		]
 for i in range(arxi, telos):
 	count+=1
