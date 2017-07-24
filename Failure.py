@@ -8,14 +8,14 @@ import sys
 import getopt
 
 gamma=1.6
-sens=100
-size=0.05
-
+sens=116
+blur=35
+hmm=1
 def adjust_gamma(image, gamma=1.0):
 	invGamma=1.0/gamma
 	table = np.array([((i / 255.0) ** invGamma) * 255
 		for i in np.arange(0, 256)]).astype("uint8")
-	return cv2.LUT(image, table)	
+	return cv2.LUT(image, table)
 
 def make_good_list(now):
 	neo=[]
@@ -41,45 +41,33 @@ def get_list(path):
 	return lis
 
 def prepare_mask(foto):
-	blue=foto[:,:,0]						
-	blue=cv2.GaussianBlur(blue, (31,31), 0)				
-	blue=adjust_gamma(blue, gamma)					
-	blue=cv2.threshold(blue, sens, 255, cv2.THRESH_BINARY_INV)[1]	
-	blue=cv2.erode(blue,None,iterations=2)				
-	blue=cv2.dilate(blue,None, iterations=4)			
+	blue=foto[:,:,0]
+	blue=cv2.GaussianBlur(blue, (blur, blur), 0)
+	blue=adjust_gamma(blue, gamma)
+	blue=cv2.threshold(blue, sens, 255, cv2.THRESH_BINARY_INV)[1]
+	blue=cv2.erode(blue,None,iterations=2)
+	blue=cv2.dilate(blue,None, iterations=4)
 	return blue
 
 def find_failure(foto, crop):
 	pix=foto.size/3
-	blue=prepare_mask(crop)
-	labels = measure.label(blue, neighbors=8, background=0)		
-	mask = np.zeros(blue.shape, dtype="uint8")
-	for label in np.unique(labels):	
-		if(label%100==0):
-			print ('label: '+str(label))				
-		if label == 0:						
-			continue					 
-		labelMask = np.zeros(blue.shape, dtype="uint8")		
-		labelMask[labels == label] = 255			
-		numPixels = cv2.countNonZero(labelMask)
-		if (numPixels/pix)*100 > size:				
-			mask = cv2.add(mask, labelMask)			
-	#cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=0.4, fy=0.4));
-	#cv2.waitKey(0);
-	cnts=cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[1]
-	cv2.drawContours(foto,cnts,-1, (0,0,255), 10)
+	mask=prepare_mask(crop)
+	cnts=cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[1]
+	neo_arr=[]
+	for cnt in cnts:
+		x,y,w,h = cv2.boundingRect(cnt)
+		if(w*h>=pix*0.01):
+			neo_arr.append(cnt)
+	cv2.drawContours(foto,neo_arr,-1, (0,0,255), 3)
 
 ####################################__MAIN__###########################################
-
-
+path="./Pictures/"
+path+="broken1.jpg"
+ogiginal=cv2.imread(path)
 if(sys.argv[1]=='-b'):
-	foto=cv2.imread(sys.argv[2])
-	marked=foto.copy()
-elif(sys.argv[1]=='-p'):
-	foto=cv2.imread(sys.argv[2])
-	exept=get_list(sys.argv[3])
-	exept=make_good_list(exept)
-	marked=make_blue(foto, exept)
-find_failure(foto, marked)
-cv2.imshow("After Detection", cv2.resize(foto,(0,0),fx=0.4, fy=0.4))
+	original=cv2.imread(sys.argv[2])
+original=cv2.resize(original, (500, 900))
+marked=original.copy()
+find_failure(original, marked)
+cv2.imshow("After Detection", cv2.resize(original,(0,0),fx=hmm, fy=hmm))
 cv2.waitKey(0)
