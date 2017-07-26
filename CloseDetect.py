@@ -86,11 +86,12 @@ def thresholdStage(image, squr, xrw):
 arxi=0
 telos=15
 
-#		[b,      g,   r, blur, squr, xrw,  gam]
+#		 [b,     g,   r, blur, squr, xrw,   gam]
 modes=[	 [255,   0,   0,    9,  109,  -6,  0.75]
 		,[0	 , 255,   0,    3,   69,   2,  0.75]
 		,[0  ,   0, 255,    3,   21,   1,  1.75]
 		,[0  , 255, 255,    0,   15,   0,   0.3]
+		,[255,   0, 255,    3,   25,   0,   0.2]
 		]
 for i in range(arxi, telos):
 	count+=1
