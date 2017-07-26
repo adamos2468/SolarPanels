@@ -55,8 +55,10 @@ def find_failure(foto, crop):
 	cnts=cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[1]
 	neo_arr=[]
 	for cnt in cnts:
+		print (cnt)
+		area=cv2.contourArea(cnt)
 		x,y,w,h = cv2.boundingRect(cnt)
-		if(w*h>=pix*0.01):
+		if(area>=pix*0.01):
 			neo_arr.append(cnt)
 	cv2.drawContours(foto,neo_arr,-1, (0,0,255), 3)
 

@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import scipy as sp
 import sys
-
 count=0
 w=255
 acc=0.18
@@ -21,25 +20,36 @@ def abs(a):
 def sfalma(orig, tim):
 	return abs(float(orig)-float(tim))/orig
 
-def auto_canny(image, sigma=0.55):
-    v = np.median(image)
-    print(sigma,"   ",v,"   ")
-    temp = (1.0 - sigma) * v
-    if temp<0:
-        lower = 0
-    else:
-        lower = int(temp)
-    upper = int(min(255, (1.0 + sigma) * v))
-    edged = cv2.Canny(image, lower, upper)
-    return edged
-
 def find_hehe(foto, mask):
 	cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=hmm, fy=hmm));
 	#cv2.waitKey(0)
 	draw_squares(mask, foto)
 
+def NumOfContours(hier):
+	c=0
+	if not(hier is None):
+		for h in hier[0]:
+			if(h[3]==-1):
+				c+=1
+	return c
+
+def intersects(cnt, img):
+	img=img.copy()
+	gray=deColorStage(img)
+	thresh = cv2.threshold(gray,254,255,cv2.THRESH_BINARY)[1]
+	hier = cv2.findContours(thresh,cv2.RETR_CCOMP,cv2.CHAIN_APPROX_SIMPLE)[2]
+	palia=NumOfContours(hier)
+	cv2.drawContours(img, [cnt], 0, (w,w,w), -1)
+	gray=deColorStage(img)
+	thresh = cv2.threshold(gray,254,255,cv2.THRESH_BINARY)[1]
+	hier = cv2.findContours(thresh,cv2.RETR_CCOMP,cv2.CHAIN_APPROX_SIMPLE)[2]
+	neo=NumOfContours(hier)
+	if(neo<=palia):
+		return True
+	return False
+
 def draw_squares(thresh, foto):
-	bin, contours, hier = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+	contours = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)[1]
 	neo_cnt=[]
 	for cnt in contours:
 		area = cv2.contourArea(cnt)
@@ -50,9 +60,12 @@ def draw_squares(thresh, foto):
 			rect = cv2.minAreaRect(cnt)
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
-			b,g,r=[0,255,255]
-			cv2.drawContours(foto,[box],0,(b,g,r),5)
-			cv2.drawContours(edit,[box],0,(w,w,w),-1)
+			if (not intersects(cnt, Solars)):
+				cv2.drawContours(foto,[box],0,(b,g,r),10)
+				cv2.drawContours(edit, [cnt], 0, (w,w,w), -1)
+				cv2.drawContours(Solars, [cnt], 0, (w,w,w), -1)
+				cv2.imshow("Solars", cv2.resize(Solars, (0,0),fx=hmm, fy=hmm))
+				#cv2.waitKey(0)
 
 def deColorStage(image):
 	image=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -89,9 +102,9 @@ for i in range(arxi, telos):
 	maxval=85
 	original=cv2.imread(path)
 	original= cv2.resize(original, (2048, 1536))
+	Solars=np.zeros((original.shape), np.uint8)
 	edit=original.copy()
 	for j in range(len(modes)):
-		cv2.imshow("The Edit", cv2.resize(edit, (0,0),fx=hmm, fy=hmm));
 		#cv2.waitKey(0)
 		b, g, r, blur, squr, xrw, gam=modes[j]
 		changes=edit.copy()
@@ -101,5 +114,5 @@ for i in range(arxi, telos):
 		changes=deColorStage(changes)
 		changes=thresholdStage(changes, squr, xrw)
 		find_hehe(original, changes)
-	cv2.imshow("Detect: "+str(count),  cv2.resize(original, (0,0),fx=hmm, fy=hmm));
+	cv2.imshow("Detect: "+str(i+1),  cv2.resize(original, (0,0),fx=hmm, fy=hmm));
 cv2.waitKey(0)
