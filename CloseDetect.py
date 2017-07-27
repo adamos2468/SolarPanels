@@ -5,7 +5,7 @@ import scipy as sp
 import sys
 count=0
 w=255
-acc=0.18
+acc=17
 def adjust_gamma(image, gamma=1.0):
 	invGamma=1.0/gamma
 	table = np.array([((i / 255.0) ** invGamma) * 255
@@ -18,7 +18,7 @@ def abs(a):
 	return a
 
 def sfalma(orig, tim):
-	return abs(float(orig)-float(tim))/orig
+	return int((abs(float(orig)-float(tim))/orig)*100)
 
 def find_hehe(foto, mask):
 	cv2.imshow("The Mask", cv2.resize(mask, (0,0),fx=hmm, fy=hmm));
@@ -55,17 +55,18 @@ def draw_squares(thresh, foto):
 		area = cv2.contourArea(cnt)
 		rect = cv2.minAreaRect(cnt)
 		carea=rect[1][0]*rect[1][1]
-		if((area>float((float(foto.size)/3)*0.01) and area<=float((float(foto.size)/3)*0.25)) and sfalma(area, carea)<=acc):
-			neo_cnt.append(cnt)
-			rect = cv2.minAreaRect(cnt)
-			box = cv2.boxPoints(rect)
-			box = np.int0(box)
-			if (not intersects(cnt, Solars)):
-				cv2.drawContours(foto,[box],0,(b,g,r),10)
-				cv2.drawContours(edit, [cnt], 0, (w,w,w), -1)
-				cv2.drawContours(Solars, [cnt], 0, (w,w,w), -1)
-				cv2.imshow("Solars", cv2.resize(Solars, (0,0),fx=hmm, fy=hmm))
-				#cv2.waitKey(0)
+		if((area>float((float(foto.size)/3)*0.01) and area<=float((float(foto.size)/3)*0.25))):
+			if(sfalma(area, carea)<=acc):
+				neo_cnt.append(cnt)
+				rect = cv2.minAreaRect(cnt)
+				box = cv2.boxPoints(rect)
+				box = np.int0(box)
+				if (not intersects(cnt, Solars)):
+					cv2.drawContours(foto,[box],0,(b,g,r),10)
+					cv2.drawContours(edit, [cnt], 0, (w,w,w), -1)
+					cv2.drawContours(Solars, [cnt], 0, (w,w,w), -1)
+					cv2.imshow("Solars", cv2.resize(Solars, (0,0),fx=hmm, fy=hmm))
+					#cv2.waitKey(0)
 
 def deColorStage(image):
 	image=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -91,7 +92,7 @@ modes=[	 [255,   0,   0,    9,  109,  -6,  0.75]
 		,[0	 , 255,   0,    3,   69,   2,  0.75]
 		,[0  ,   0, 255,    3,   21,   1,  1.75]
 		,[0  , 255, 255,    0,   15,   0,   0.3]
-		,[255,   0, 255,    3,   25,   0,   0.2]
+		,[255,   0, 255,    3,    5,   0,   0.2]
 		]
 for i in range(arxi, telos):
 	count+=1
@@ -106,7 +107,7 @@ for i in range(arxi, telos):
 	Solars=np.zeros((original.shape), np.uint8)
 	edit=original.copy()
 	for j in range(len(modes)):
-		#cv2.waitKey(0)
+		print ("AT MODE: "+str(j))
 		b, g, r, blur, squr, xrw, gam=modes[j]
 		changes=edit.copy()
 		if(blur>=3):
