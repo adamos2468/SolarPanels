@@ -60,7 +60,7 @@ def find_failure(foto, crop):
 		x,y,w,h = cv2.boundingRect(cnt)
 		if(area>=pix*0.01):
 			neo_arr.append(cnt)
-	cv2.drawContours(foto,neo_arr,-1, (0,0,255), 3)
+	cv2.drawContours(foto,neo_arr,-1, (0,0,255), 15)
 
 ####################################__MAIN__###########################################
 path="./Pictures/"
@@ -68,8 +68,8 @@ path+="broken1.jpg"
 ogiginal=cv2.imread(path)
 if(sys.argv[1]=='-b'):
 	original=cv2.imread(sys.argv[2])
-original=cv2.resize(original, (500, 900))
+#original=cv2.resize(original, (500, 900))
 marked=original.copy()
 find_failure(original, marked)
 cv2.imshow("After Detection", cv2.resize(original,(0,0),fx=hmm, fy=hmm))
-cv2.waitKey(0)
+cv2.imwrite("./Ans/FailureResult.jpg", original);cv2.waitKey(0)

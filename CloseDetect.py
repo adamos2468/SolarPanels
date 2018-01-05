@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import sys
+
 count=0#The count of image proccessed
 w=255  #The White Constant
 acc=17 #Accepted Error
@@ -94,9 +96,12 @@ def thresholdStage(image, squr, xrw):
 	image=cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,squr, xrw)
 	return image
 
+
 arxi=0
 telos=15
-
+if(len(sys.argv)>=2 and sys.argv[1]=='-f'):
+	arxi=0
+	telos=1
 #		 [b,     g,   r, blur, squr, xrw,   gam]
 modes=[	 [255,   0,   0,    9,  109,  -6,  0.75]
 		,[0	 , 255,   0,    3,   69,   2,  0.75]
@@ -108,10 +113,12 @@ for i in range(arxi, telos):
 	count+=1
 	path="./Pictures/konta/"
 	path+="konta"+str(i+1)+".jpg" 				#Choosing the image
+	if(len(sys.argv)>=2 and sys.argv[1]=='-f'):
+		path=sys.argv[2]
 	print (path)
 	hmm=0.5										#The resize value
 	original=cv2.imread(path)					#read the image
-	original= cv2.resize(original, (2048, 1536))#resize it!
+	#original= cv2.resize(original, (2048, 1536))#resize it!
 	Solars=np.zeros((original.shape), np.uint8)	#the black image of contours
 	edit=original.copy()						#the image that marks
 	for j in range(len(modes)):					#for each mode
@@ -127,4 +134,5 @@ for i in range(arxi, telos):
 		#find the solar panels
 		draw_squares(changes, original)
 	cv2.imshow("Detect: "+str(i+1),  cv2.resize(original, (0,0),fx=hmm, fy=hmm));
+	cv2.imwrite("./Ans/CloseDetectResult"+str(i)+".jpg", original);
 cv2.waitKey(0)
